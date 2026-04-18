@@ -1,0 +1,19 @@
+# Gradle
+.gradle/
+build/
+app/build/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Spark jobs (jar файлы не коммитим, они собираются локально)
+spark-jobs/*.jar
+
+# OS
+.DS_Store
+Thumbs.db
+EOF
