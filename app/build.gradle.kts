@@ -26,7 +26,7 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(11)
     }
 }
 
@@ -41,4 +41,10 @@ tasks.named<Test>("test") {
 tasks.shadowJar {
     archiveClassifier.set("")
     mergeServiceFiles()
+}
+
+configurations.all {
+    resolutionStrategy.capabilitiesResolution.withCapability("org.lz4:lz4-java") {
+        selectHighestVersion()
+    }
 }
