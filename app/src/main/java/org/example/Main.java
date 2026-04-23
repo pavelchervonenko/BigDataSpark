@@ -24,7 +24,7 @@ public class Main {
                 CassandraJob.run();
                 break;
             case "mongo":
-                //MongoJob.run();
+                MongoJob.run();
                 break;
             default:
                 System.out.println("Unknown job: " + args[0]);
