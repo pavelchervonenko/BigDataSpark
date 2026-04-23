@@ -21,7 +21,7 @@ public class Main {
                 ClickHouseJob.run();
                 break;
             case "cassandra":
-                //CassandraJob.run();
+                CassandraJob.run();
                 break;
             case "mongo":
                 //MongoJob.run();

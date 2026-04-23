@@ -16,9 +16,9 @@ dependencies {
 
     implementation("com.clickhouse:clickhouse-jdbc:0.9.8:all")
 
-    implementation("com.datastax.spark:spark-cassandra-connector_2.13:3.5.1")
+    implementation("com.datastax.spark:spark-cassandra-connector_2.12:3.5.1")
 
-    implementation("org.mongodb.spark:mongo-spark-connector_2.13:11.0.1")
+    implementation("org.mongodb.spark:mongo-spark-connector_2.12:10.3.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.13.4")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
