@@ -1,0 +1,84 @@
+  services:
+    postgres:
+      image: postgres:15
+      container_name: spark_postgres
+      environment:
+        POSTGRES_DB: snowflake_db
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+      ports:
+        - "5432:5432"
+      volumes:
+        - ./init:/docker-entrypoint-initdb.d
+        - ./исходные данные:/csv
+        - pgdata:/var/lib/postgresql/data
+      networks:
+        - spark_network
+
+    clickhouse:
+      image: clickhouse/clickhouse-server:latest
+      container_name: spark_clickhouse
+      environment:
+        CLICKHOUSE_USER: default
+        CLICKHOUSE_PASSWORD: ""
+        CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+      ports:
+        - "8123:8123"
+        - "9000:9000"
+      volumes:
+        - chdata:/var/lib/clickhouse
+      networks:
+        - spark_network
+
+    cassandra:
+      image: cassandra:4.1
+      container_name: spark_cassandra
+      ports:
+        - "9042:9042"
+      volumes:
+        - cassdata:/var/lib/cassandra
+      networks:
+        - spark_network
+
+    mongo:
+      image: mongo:7
+      container_name: spark_mongo
+      ports:
+        - "27017:27017"
+      volumes:
+        - mongodata:/data/db
+      networks:
+        - spark_network
+
+    spark:
+      image: apache/spark:3.5.0
+      container_name: spark_master
+      environment:
+        - SPARK_NO_DAEMONIZE=true
+      command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+      ports:
+        - "8080:8080"
+        - "7077:7077"
+      volumes:
+        - ./spark-jobs:/spark-jobs
+      networks:
+        - spark_network
+
+    spark-worker:
+      image: apache/spark:3.5.0
+      container_name: spark_worker
+      command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark:7077
+      volumes:
+        - ./spark-jobs:/spark-jobs
+      networks:
+        - spark_network
+
+  networks:
+    spark_network:
+      driver: bridge
+
+  volumes:
+    pgdata:
+    chdata:
+    cassdata:
+    mongodata:
