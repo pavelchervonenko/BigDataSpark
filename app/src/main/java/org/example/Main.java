@@ -18,7 +18,7 @@ public class Main {
                 TransformJob.run();
                 break;
             case "clickhouse":
-                //ClickHouseJob.run();
+                ClickHouseJob.run();
                 break;
             case "cassandra":
                 //CassandraJob.run();
