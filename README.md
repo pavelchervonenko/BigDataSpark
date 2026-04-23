@@ -2,6 +2,149 @@
 
 Анализ больших данных - лабораторная работа №2 - ETL реализованный с помощью Spark
 
+### Червоненко Павел (@pavelchervonenko)
+
+## Содержание
+- [Стек](#стек)
+- [Структура репозитоиия](#структура-репозитория)
+- [Запуск](#запуск)
+- [Cхема снежинка](#схема снежинка)
+- [Отчёты в NoSQL БД](#отчёты-в-nosql-бд)
+- [Проверка данных](#проверка-данных)
+- [Описание](#описание)
+
+
+## Стек
+- **Apache Spark 3.5.0** - ETL пайплайн
+- **PostgreSQL 15** - источник данных и схема снежинка
+- **ClickHouse** - отчеты
+- **Cassandra 4.1** - Червоненко Павел (@pavelchervonenko)
+- **MongoDB 7** - отчеты
+
+## Структура репозитория
+
+```
+BigDataSpark/
+├── исходные данные/     - 10 CSV файлов по 1000 строк
+├── init/
+│   └── 01_init.sql      - создание mock_data и загрузка CSV
+├── cassandra/
+│   └── init.cql         - создание таблиц в Cassandra
+├── spark-jobs/          - собранный jar файл
+├── app/                 - исходный код Spark джобов
+│   ├── build.gradle.kts
+│   └── src/main/java/org/example/
+│       ├── Main.java
+│       ├── config/
+│       │   └── AppConfig.java
+│       └── jobs/
+│           ├── TransformJob.java
+│           ├── ClickHouseReportJob.java
+│           ├── CassandraReportJob.java
+│           └── MongoReportJob.java
+├── build.gradle.kts
+├── settings.gradle.kts
+└── docker-compose.yml	 - запуск всех БД и Spark
+```
+
+## Запуск
+
+1. Запустить все сервисы:
+```bash
+docker compose up -d
+```
+
+2. Инициализировать таблицы в Cassandra:
+```bash
+docker cp cassandra/init.cql spark_cassandra:/init.cql
+docker exec -it spark_cassandra cqlsh -f /init.cql
+```
+
+3. Собрать jar файл:
+```bash
+./gradlew shadowJar
+cp app/build/libs/app.jar spark-jobs/
+```
+
+4. Запустить ETL трансформацию (mock_data в снежинку в PostgreSQL):
+```bash
+docker exec spark_master /opt/spark/bin/spark-submit \
+  --master spark://spark:7077 \
+  --class org.example.Main \
+  /spark-jobs/app.jar transform
+```
+
+5. Запустить отчеты в ClickHouse:
+```bash
+docker exec spark_master /opt/spark/bin/spark-submit \
+  --master spark://spark:7077 \
+  --class org.example.Main \
+  /spark-jobs/app.jar clickhouse
+```
+
+6. Запустить отчеты в Cassandra:
+```bash
+docker exec spark_master /opt/spark/bin/spark-submit \
+  --master spark://spark:7077 \
+  --class org.example.Main \
+  /spark-jobs/app.jar cassandra
+```
+
+7. Запустить отчёты в MongoDB:
+```bash
+docker exec spark_master /opt/spark/bin/spark-submit \
+  --master spark://spark:7077 \
+  --class org.example.Main \
+  /spark-jobs/app.jar mongo
+```
+
+## Схема снежинка
+
+Выявленные сущности из исходных данных:
+
+Таблица фактов:
+- `fact_sale` - факт продажи (событие, связывающее все измерения)
+
+Таблицы измерений:
+- `dim_customer` - покупатели
+- `dim_pet` - питомцы покупателей (нормализация из dim_customer)
+- `dim_seller` - продавцы
+- `dim_product` - товары
+- `dim_store` - магазины
+- `dim_supplier` - поставщики
+
+## Отчеты в NoSQL БД
+
+Каждая БД содержит 6 одинаковых отчётов:
+
+| Отчёт | Строк |
+|---|---|
+| report_products | 1000 |
+| report_customers | 1000 |
+| report_time | 12 |
+| report_stores | 383 |
+| report_suppliers | 383 |
+| report_quality | 1000 |
+
+## Проверка данных
+
+ClickHouse:
+```sql
+SELECT COUNT(*) FROM reports.report_products;
+```
+
+Cassandra:
+```bash
+docker exec -it spark_cassandra cqlsh -e "SELECT COUNT(*) FROM reports.report_products;"
+```
+
+MongoDB:
+```bash
+docker exec -it spark_mongo mongosh --eval "db.report_products.countDocuments()" reports
+```
+
+## Описание
+
 Одним из самых популярных фреймворков для работы с Big Data является Apache Spark. Apache Spark - мощный фреймворк, который предлагает широкий набор функциональности для простого написания ETL-пайплайнов.
 
 Что необходимо сделать? 
